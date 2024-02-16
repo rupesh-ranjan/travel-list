@@ -7,11 +7,34 @@ const initialItems = [
 ];
 
 export default function App() {
+  const [items, setItems] = useState(initialItems);
+
+  function handleAddItems(item) {
+    setItems((items) => [...items, item]);
+  }
+
+  function handleDeleteItem(id) {
+    setItems((items) => items.filter((item) => item.id !== id));
+    // setItems(items.filter((item) => item.id !== id));
+  }
+
+  function handleToggleItem(id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <PackingList />
+      <Form onAddItems={handleAddItems} />
+      <PackingList
+        items={items}
+        onDeleteItem={handleDeleteItem}
+        onToggleItems={handleToggleItem}
+      />
       <Stats />
     </div>
   );
@@ -21,7 +44,7 @@ function Logo() {
   return <h1>🌴 Far Away 👜</h1>;
 }
 
-function Form() {
+function Form(props) {
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
 
@@ -36,6 +59,8 @@ function Form() {
       packed: false,
     };
     console.log(newItem);
+    props.onAddItems(newItem);
+
     setDescription("");
     setQuantity(1);
   }
@@ -63,12 +88,22 @@ function Form() {
   );
 }
 
-function PackingList() {
+function PackingList(props) {
   return (
     <div className="list">
-      <ul>
+      {/* <ul>
         {initialItems.map((item) => (
-          <Item item={item} key={item.id} />
+          <Item item={item} key={item.id} onDeleteItem={props.onDeleteItem} />
+        ))}
+      </ul> */}
+      <ul>
+        {props.items.map((item) => (
+          <Item
+            item={item}
+            key={item.id}
+            onDeleteItem={props.onDeleteItem}
+            onToggleItems={props.onToggleItems}
+          />
         ))}
       </ul>
     </div>
@@ -78,10 +113,18 @@ function PackingList() {
 function Item(props) {
   return (
     <li>
+      <input
+        type="checkbox"
+        checked={props.item.packed}
+        value={props.item.packed}
+        onChange={() => {
+          props.onToggleItems(props.item.id);
+        }}
+      />
       <span style={props.item.packed ? { textDecoration: "line-through" } : {}}>
         {props.item.quantity} {props.item.description}
       </span>
-      <button>❌</button>
+      <button onClick={() => props.onDeleteItem(props.item.id)}>❌</button>
     </li>
   );
 }
@@ -89,9 +132,7 @@ function Item(props) {
 function Stats() {
   return (
     <footer className="stats">
-      <em>
-        💼You have X items in your list, and you already packed Y (Z%)
-      </em>
+      <em>💼You have X items in your list, and you already packed Y (Z%)</em>
     </footer>
   );
 }
